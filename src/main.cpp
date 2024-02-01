@@ -7,25 +7,24 @@
 void piscaLed()
 {
   bool x = digitalRead(PINLED);
-  digitalWrite(PINLED, !x);
-}
-
-void setup()
-{
-  pinMode(PINLED, OUTPUT);
-  pinMode(BOTAO, INPUT);
-  // threadSetup(piscaLed, 500, NULL);
-}
-
-void loop()
-{
   if (digitalRead(BOTAO) == HIGH)
   {
-    piscaLed();
+    digitalWrite(PINLED, !x);
   }
   else
   {
     digitalWrite(PINLED, LOW);
   }
   delay(500);
+}
+
+void setup()
+{
+  pinMode(PINLED, OUTPUT);
+  pinMode(BOTAO, INPUT);
+  threadSetup(piscaLed, 500, NULL);
+}
+
+void loop()
+{
 }
