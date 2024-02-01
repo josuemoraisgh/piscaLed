@@ -4,6 +4,10 @@
 #include <Arduino.h>
 #include <stdarg.h>
 
+#define USE_TIMER_1 true
+#include "TimerInterrupt.h"
+
+#define TIMER_INTERVAL_MS 1
 #define TAMTHREAD 5
 using CallbackFunc = void (*)(); // definição de tipo para nossa callback
 struct threadStruct
@@ -14,6 +18,20 @@ struct threadStruct
 };
 threadStruct thread;
 volatile int numThread;
+
+void TimerHandler()
+{
+  for (int i = 0; i < numThread && i < TAMTHREAD; i++)
+  {
+    if (thread.time[i] >= thread.interval[i])
+    {
+      thread.func[i]();
+      thread.time[i] = 0;
+    }
+    else
+      thread.time[i]++;
+  }
+}
 
 void threadSetup(CallbackFunc callback, int threadInterval, ...)
 {
@@ -26,12 +44,6 @@ void threadSetup(CallbackFunc callback, int threadInterval, ...)
     va_arg(args, int);
     numThread++;
   }
-
-  // Dynamically allocate memory using malloc()
-  // threadTime     = (int *) malloc(numThread * sizeof(int));
-  // threadInterval = (int *) malloc(numThread * sizeof(int));
-  // threadFunc     = (CallbackFunc *) malloc(numThread * sizeof(CallbackFunc));
-
   thread.time[0] = 0;
   thread.func[0] = callback;
   thread.interval[0] = threadInterval;
@@ -44,24 +56,6 @@ void threadSetup(CallbackFunc callback, int threadInterval, ...)
     thread.interval[i] = va_arg(args, int);
   }
   va_end(args);
-  cli();               // desliga as interrupções para não haver error durante a configuração
-  TCCR1A = 0b01000000; // modo comparação
-  TCCR1B = 0b00001011; // configuração do prescaler em 64 e OCR1A register is used to manipulate the counter resolution
-  TIMSK1 = 0b00000001; // habilita a interrupção por overflow do timer
-  OCR1A = 249;         // compare match register = [ 16,000,000Hz/ (prescaler * desired interrupt frequency) ] - 1
-  sei();               // habilita interrupções globais
-}
-
-ISR(TIMER1_OVF_vect)
-{
-  for (int i = 0; i < numThread && i < TAMTHREAD; i++)
-  {
-    if (thread.time[i] >= thread.interval[i])
-    {
-      thread.func[i]();
-      thread.time[i] = 0;
-    }
-    else
-      thread.time[i]++;
-  }
+  ITimer1.init();
+  ITimer1.attachInterruptInterval(TIMER_INTERVAL_MS, TimerHandler);
 }

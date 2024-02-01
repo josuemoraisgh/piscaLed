@@ -15,7 +15,6 @@ void piscaLed()
   {
     digitalWrite(PINLED, LOW);
   }
-  delay(500);
 }
 
 void setup()
