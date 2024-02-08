@@ -17,11 +17,25 @@ void piscaLed()
   }
 }
 
+void seralComm()
+{
+  if (Serial.available() > 0)
+  {
+    String x = Serial.readStringUntil('\n');
+    Serial.print("O valor desejado foi:");
+    Serial.println(x);
+    Serial.println("Digite o tempo desejado:");
+    thread.interval[0] = x.toInt();
+  }
+}
+
 void setup()
 {
+  Serial.begin(115200);
   pinMode(PINLED, OUTPUT);
   pinMode(BOTAO, INPUT);
-  threadSetup(piscaLed, 500, NULL);
+  threadSetup(piscaLed, 500, seralComm, 100, NULL);
+  Serial.println("Digite o tempo desejado:");
 }
 
 void loop()
